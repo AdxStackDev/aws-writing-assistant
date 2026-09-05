@@ -5,7 +5,7 @@ resource "aws_apigatewayv2_api" "main" {
   cors_configuration {
     allow_origins = [
       "http://localhost:5173",
-      "https://${aws_cloudfront_distribution.frontend.domain_name}"
+      "http://${aws_s3_bucket_website_configuration.frontend.website_endpoint}"
     ]
 
     allow_methods = [
@@ -39,10 +39,7 @@ resource "aws_apigatewayv2_authorizer" "cognito" {
       aws_cognito_user_pool_client.frontend.id
     ]
 
-    issuer = (
-      "https://cognito-idp.${var.aws_region}.amazonaws.com/" +
-      aws_cognito_user_pool.main.id
-    )
+    issuer = "https://cognito-idp.${var.aws_region}.amazonaws.com/${aws_cognito_user_pool.main.id}"
   }
 }
 

@@ -22,10 +22,9 @@ output "frontend_bucket" {
   value = aws_s3_bucket.frontend.id
 }
 
-output "cloudfront_distribution_id" {
-  value = aws_cloudfront_distribution.frontend.id
+output "frontend_url" {
+  value = "http://${aws_s3_bucket_website_configuration.frontend.website_endpoint}"
 }
 
-output "cloudfront_domain" {
-  value = aws_cloudfront_distribution.frontend.domain_name
-}
+# cloudfront_distribution_id and cloudfront_domain are disabled until
+# the AWS account is verified. Re-enable alongside cloudfront.tf.disabled.

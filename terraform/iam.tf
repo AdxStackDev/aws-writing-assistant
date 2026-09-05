@@ -219,6 +219,18 @@ resource "aws_iam_role_policy" "worker_lambda" {
         Effect = "Allow"
 
         Action = [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ]
+
+        Resource = aws_sqs_queue.notification.arn
+      },
+
+      {
+        Effect = "Allow"
+
+        Action = [
           "sns:Publish"
         ]
 
