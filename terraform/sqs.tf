@@ -12,3 +12,10 @@ resource "aws_sqs_queue" "notification" {
     maxReceiveCount     = 3
   })
 }
+
+resource "aws_lambda_event_source_mapping" "notification_worker" {
+  event_source_arn = aws_sqs_queue.notification.arn
+  function_name    = aws_lambda_function.worker.arn
+
+  batch_size = 10
+}
