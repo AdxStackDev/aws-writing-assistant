@@ -3,12 +3,12 @@ data "archive_file" "chat_lambda" {
   output_path = "${path.module}/chat_lambda.zip"
 
   source {
-    content = file("${path.module}/../backend/chat/handler.py")
+    content  = file("${path.module}/../backend/chat/handler.py")
     filename = "handler.py"
   }
 
   source {
-    content = file("${path.module}/../backend/tools/writing_tools.py")
+    content  = file("${path.module}/../backend/tools/writing_tools.py")
     filename = "tools/writing_tools.py"
   }
 }
@@ -23,6 +23,16 @@ data "archive_file" "history_lambda" {
   }
 }
 
+data "archive_file" "profile_lambda" {
+  type        = "zip"
+  output_path = "${path.module}/profile_lambda.zip"
+
+  source {
+    content  = file("${path.module}/../backend/profile/handler.py")
+    filename = "handler.py"
+  }
+}
+
 data "archive_file" "worker_lambda" {
   type        = "zip"
   output_path = "${path.module}/worker_lambda.zip"
@@ -31,6 +41,11 @@ data "archive_file" "worker_lambda" {
     content  = file("${path.module}/../backend/notification_worker/handler.py")
     filename = "handler.py"
   }
+}
+
+resource "aws_cloudwatch_log_group" "api" {
+  name              = "/aws/lambda/${local.name_prefix}-api"
+  retention_in_days = 14
 }
 
 resource "aws_lambda_function" "chat" {
@@ -49,9 +64,9 @@ resource "aws_lambda_function" "chat" {
 
   environment {
     variables = {
-      BEDROCK_MODEL_ID      = var.bedrock_model_id
-      CONVERSATIONS_TABLE   = aws_dynamodb_table.conversations.name
-      MESSAGES_TABLE        = aws_dynamodb_table.messages.name
+      BEDROCK_MODEL_ID       = var.bedrock_model_id
+      CONVERSATIONS_TABLE    = aws_dynamodb_table.conversations.name
+      MESSAGES_TABLE         = aws_dynamodb_table.messages.name
       NOTIFICATION_QUEUE_URL = aws_sqs_queue.notification.url
     }
   }

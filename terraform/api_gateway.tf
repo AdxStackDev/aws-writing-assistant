@@ -3,12 +3,14 @@ resource "aws_apigatewayv2_api" "main" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = ["*"]
+    allow_origins = [
+      "http://localhost:5173",
+      "https://${aws_cloudfront_distribution.frontend.domain_name}"
+    ]
 
     allow_methods = [
       "GET",
       "POST",
-      "PUT",
       "OPTIONS"
     ]
 
@@ -54,6 +56,7 @@ resource "aws_apigatewayv2_integration" "chat" {
   )
 
   payload_format_version = "2.0"
+  timeout_milliseconds   = 29000
 }
 
 resource "aws_apigatewayv2_integration" "history" {
@@ -66,6 +69,7 @@ resource "aws_apigatewayv2_integration" "history" {
   )
 
   payload_format_version = "2.0"
+  timeout_milliseconds   = 29000
 }
 
 resource "aws_apigatewayv2_integration" "profile" {
@@ -78,6 +82,7 @@ resource "aws_apigatewayv2_integration" "profile" {
   )
 
   payload_format_version = "2.0"
+  timeout_milliseconds   = 29000
 }
 
 resource "aws_apigatewayv2_route" "chat" {

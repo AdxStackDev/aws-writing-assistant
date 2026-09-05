@@ -18,7 +18,7 @@ resource "aws_dynamodb_table" "conversations" {
   name         = "${local.name_prefix}-conversations"
   billing_mode = "PAY_PER_REQUEST"
 
-  hash_key = "user_id"
+  hash_key  = "user_id"
   range_key = "conversation_id"
 
   attribute {

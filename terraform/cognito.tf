@@ -21,7 +21,7 @@ resource "aws_cognito_user_pool" "main" {
   }
 
   account_recovery_setting {
-    recovery_mechanisms {
+    recovery_mechanism {
       name     = "verified_email"
       priority = 1
     }
@@ -35,7 +35,7 @@ resource "aws_cognito_user_pool_client" "frontend" {
   generate_secret = false
 
   explicit_auth_flows = [
-    "ALLOW_USER_PASSWORD_AUTH",
+    "ALLOW_USER_SRP_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH"
   ]
 
