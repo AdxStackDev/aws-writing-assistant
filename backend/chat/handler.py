@@ -1,0 +1,288 @@
+import json
+import os
+import uuid
+from datetime import datetime, timezone
+
+import boto3
+
+from tools.writing_tools import analyze_text
+
+
+REGION = os.environ.get(
+    "AWS_REGION",
+    "ap-south-1"
+)
+
+MODEL_ID = os.environ.get(
+    "BEDROCK_MODEL_ID",
+    "zai.glm-5"
+)
+
+CONVERSATIONS_TABLE = os.environ["CONVERSATIONS_TABLE"]
+MESSAGES_TABLE = os.environ["MESSAGES_TABLE"]
+NOTIFICATION_QUEUE_URL = os.environ["NOTIFICATION_QUEUE_URL"]
+
+
+bedrock = boto3.client(
+    "bedrock-runtime",
+    region_name=REGION
+)
+
+dynamodb = boto3.resource(
+    "dynamodb",
+    region_name=REGION
+)
+
+sqs = boto3.client(
+    "sqs",
+    region_name=REGION
+)
+
+conversations_table = dynamodb.Table(
+    CONVERSATIONS_TABLE
+)
+
+messages_table = dynamodb.Table(
+    MESSAGES_TABLE
+)
+
+
+def response(status_code, body):
+    return {
+        "statusCode": status_code,
+        "headers": {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+        },
+        "body": json.dumps(body),
+    }
+
+
+def get_user_id(event):
+    claims = (
+        event
+        .get("requestContext", {})
+        .get("authorizer", {})
+        .get("jwt", {})
+        .get("claims", {})
+    )
+
+    user_id = claims.get("sub")
+
+    if not user_id:
+        raise ValueError("Authenticated user not found")
+
+    return user_id
+
+
+def invoke_bedrock(user_message, analysis):
+    system_prompt = """
+You are an AI writing assistant.
+
+Your job is to help users improve writing.
+
+You have access to deterministic measurements generated
+by Python analysis tools.
+
+Use those measurements when giving feedback.
+
+Do not invent measurements.
+
+When useful, explain:
+- word count
+- readability
+- weak words
+- long sentences
+- repeated words
+
+Give practical, specific recommendations.
+
+The user may ask for:
+- writing review
+- rewriting
+- grammar improvement
+- professional tone
+- technical writing
+- concise writing
+- readability improvement
+"""
+
+    user_prompt = f"""
+Analyze the following writing.
+
+WRITING:
+{user_message}
+
+DETERMINISTIC ANALYSIS:
+{json.dumps(analysis, indent=2)}
+
+Return a useful response for the user.
+"""
+
+    result = bedrock.converse(
+        modelId=MODEL_ID,
+        system=[
+            {
+                "text": system_prompt
+            }
+        ],
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "text": user_prompt
+                    }
+                ],
+            }
+        ],
+        inferenceConfig={
+            "maxTokens": 2000,
+            "temperature": 0.2,
+        },
+    )
+
+    return result["output"]["message"]["content"][0]["text"]
+
+
+def save_message(
+    conversation_id,
+    role,
+    content,
+    analysis=None
+):
+    timestamp = datetime.now(
+        timezone.utc
+    ).isoformat()
+
+    item = {
+        "conversation_id": conversation_id,
+        "created_at": timestamp,
+        "role": role,
+        "content": content,
+    }
+
+    if analysis is not None:
+        item["analysis"] = analysis
+
+    messages_table.put_item(
+        Item=item
+    )
+
+    return timestamp
+
+
+def save_conversation(
+    user_id,
+    conversation_id,
+    title
+):
+    timestamp = datetime.now(
+        timezone.utc
+    ).isoformat()
+
+    conversations_table.put_item(
+        Item={
+            "user_id": user_id,
+            "conversation_id": conversation_id,
+            "title": title[:100],
+            "created_at": timestamp,
+            "updated_at": timestamp,
+        }
+    )
+
+
+def publish_notification(
+    user_id,
+    conversation_id
+):
+    sqs.send_message(
+        QueueUrl=NOTIFICATION_QUEUE_URL,
+        MessageBody=json.dumps({
+            "event": "chat.completed",
+            "user_id": user_id,
+            "conversation_id": conversation_id,
+        })
+    )
+
+
+def lambda_handler(event, context):
+
+    try:
+
+        user_id = get_user_id(event)
+
+        body = json.loads(
+            event.get("body") or "{}"
+        )
+
+        message = body.get("message", "").strip()
+
+        if not message:
+            return response(
+                400,
+                {
+                    "error": "message is required"
+                }
+            )
+
+        conversation_id = (
+            body.get("conversation_id")
+            or str(uuid.uuid4())
+        )
+
+        # Create conversation if this is a new chat.
+        if not body.get("conversation_id"):
+            title = message[:80]
+            save_conversation(
+                user_id,
+                conversation_id,
+                title
+            )
+
+        analysis = analyze_text(message)
+
+        save_message(
+            conversation_id,
+            "user",
+            message,
+            analysis
+        )
+
+        ai_response = invoke_bedrock(
+            message,
+            analysis
+        )
+
+        save_message(
+            conversation_id,
+            "assistant",
+            ai_response
+        )
+
+        publish_notification(
+            user_id,
+            conversation_id
+        )
+
+        return response(
+            200,
+            {
+                "conversation_id": conversation_id,
+                "message": ai_response,
+                "analysis": analysis,
+            }
+        )
+
+    except Exception as exc:
+
+        print(
+            f"ERROR: {type(exc).__name__}: {exc}"
+        )
+
+        return response(
+            500,
+            {
+                "error": "Unable to process chat"
+            }
+        )
