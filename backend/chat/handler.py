@@ -2,6 +2,7 @@ import json
 import os
 import uuid
 from datetime import datetime, timezone
+from decimal import Decimal
 
 import boto3
 from openai import OpenAI
@@ -39,6 +40,17 @@ sqs = boto3.client(
 
 conversations_table = dynamodb.Table(CONVERSATIONS_TABLE)
 messages_table = dynamodb.Table(MESSAGES_TABLE)
+
+
+def to_ddb(value):
+    """Recursively convert floats to Decimal for DynamoDB."""
+    if isinstance(value, float):
+        return Decimal(str(value))
+    if isinstance(value, dict):
+        return {k: to_ddb(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [to_ddb(v) for v in value]
+    return value
 
 
 def response(status_code, body):
@@ -115,7 +127,7 @@ def save_message(
     }
 
     if analysis is not None:
-        item["analysis"] = analysis
+        item["analysis"] = to_ddb(analysis)
 
     messages_table.put_item(Item=item)
 

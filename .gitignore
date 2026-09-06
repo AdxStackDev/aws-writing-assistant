@@ -19,6 +19,7 @@ venv/
 *.tfstate.*
 *.tfplan
 crash.log
+secret.tfvars
 
 # Lambda layer build artifacts
 backend/lambda_layers/
