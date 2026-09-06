@@ -20,6 +20,9 @@ venv/
 *.tfplan
 crash.log
 
+# Lambda layer build artifacts
+backend/lambda_layers/
+
 # IDE
 .vscode/
 .idea/

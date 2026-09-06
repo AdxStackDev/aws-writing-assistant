@@ -43,6 +43,13 @@ data "archive_file" "worker_lambda" {
   }
 }
 
+resource "aws_lambda_layer_version" "openai" {
+  layer_name          = "${local.name_prefix}-openai"
+  filename            = "${path.module}/../backend/lambda_layers/openai_layer.zip"
+  source_code_hash    = filebase64sha256("${path.module}/../backend/lambda_layers/openai_layer.zip")
+  compatible_runtimes = ["python3.12"]
+}
+
 resource "aws_cloudwatch_log_group" "api" {
   name              = "/aws/lambda/${local.name_prefix}-api"
   retention_in_days = 14
@@ -62,12 +69,16 @@ resource "aws_lambda_function" "chat" {
   timeout     = 60
   memory_size = 512
 
+  layers = [aws_lambda_layer_version.openai.arn]
+
   environment {
     variables = {
       BEDROCK_MODEL_ID       = var.bedrock_model_id
       CONVERSATIONS_TABLE    = aws_dynamodb_table.conversations.name
       MESSAGES_TABLE         = aws_dynamodb_table.messages.name
       NOTIFICATION_QUEUE_URL = aws_sqs_queue.notification.url
+      OPENAI_API_KEY         = var.openai_api_key
+      OPENAI_BASE_URL        = var.openai_base_url
     }
   }
 }

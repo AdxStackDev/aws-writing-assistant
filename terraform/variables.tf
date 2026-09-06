@@ -21,3 +21,15 @@ variable "bedrock_model_id" {
   type        = string
   default     = "openai.gpt-oss-120b"
 }
+
+variable "openai_api_key" {
+  description = "API key for Bedrock OpenAI-compatible endpoint"
+  type        = string
+  sensitive   = true
+}
+
+variable "openai_base_url" {
+  description = "Base URL for Bedrock OpenAI-compatible endpoint"
+  type        = string
+  default     = "https://bedrock-mantle.us-east-1.api.aws/v1"
+}

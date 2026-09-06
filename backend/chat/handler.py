@@ -23,17 +23,9 @@ CONVERSATIONS_TABLE = os.environ["CONVERSATIONS_TABLE"]
 MESSAGES_TABLE = os.environ["MESSAGES_TABLE"]
 NOTIFICATION_QUEUE_URL = os.environ["NOTIFICATION_QUEUE_URL"]
 
-# Bedrock OpenAI-compatible endpoint
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
-OPENAI_BASE_URL = os.environ.get(
-    "OPENAI_BASE_URL",
-    "https://bedrock-mantle.us-east-1.api.aws/v1"
-)
-
-openai_client = OpenAI(
-    api_key=OPENAI_API_KEY,
-    base_url=OPENAI_BASE_URL,
-)
+# OpenAI client picks up OPENAI_API_KEY and OPENAI_BASE_URL
+# from environment variables automatically.
+client = OpenAI()
 
 dynamodb = boto3.resource(
     "dynamodb",
@@ -45,13 +37,8 @@ sqs = boto3.client(
     region_name=REGION
 )
 
-conversations_table = dynamodb.Table(
-    CONVERSATIONS_TABLE
-)
-
-messages_table = dynamodb.Table(
-    MESSAGES_TABLE
-)
+conversations_table = dynamodb.Table(CONVERSATIONS_TABLE)
+messages_table = dynamodb.Table(MESSAGES_TABLE)
 
 
 def response(status_code, body):
@@ -101,17 +88,15 @@ def invoke_model(user_message, analysis):
         f"Return a useful response for the user."
     )
 
-    result = openai_client.chat.completions.create(
+    result = client.responses.create(
         model=MODEL_ID,
-        messages=[
+        input=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        max_tokens=2000,
-        temperature=0.2,
     )
 
-    return result.choices[0].message.content
+    return result.output_text
 
 
 def save_message(
@@ -120,9 +105,7 @@ def save_message(
     content,
     analysis=None
 ):
-    timestamp = datetime.now(
-        timezone.utc
-    ).isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     item = {
         "conversation_id": conversation_id,
@@ -139,14 +122,8 @@ def save_message(
     return timestamp
 
 
-def save_conversation(
-    user_id,
-    conversation_id,
-    title
-):
-    timestamp = datetime.now(
-        timezone.utc
-    ).isoformat()
+def save_conversation(user_id, conversation_id, title):
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     conversations_table.put_item(
         Item={
@@ -159,10 +136,7 @@ def save_conversation(
     )
 
 
-def publish_notification(
-    user_id,
-    conversation_id
-):
+def publish_notification(user_id, conversation_id):
     sqs.send_message(
         QueueUrl=NOTIFICATION_QUEUE_URL,
         MessageBody=json.dumps({
