@@ -28,3 +28,7 @@ output "frontend_url" {
 
 # cloudfront_distribution_id and cloudfront_domain are disabled until
 # the AWS account is verified. Re-enable alongside cloudfront.tf.disabled.
+output "github_actions_role_arn" {
+  description = "IAM role ARN used by GitHub Actions"
+  value       = aws_iam_role.github_actions.arn
+}
