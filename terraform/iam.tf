@@ -1,3 +1,4 @@
+data "aws_caller_identity" "current" {}
 resource "aws_iam_role" "chat_lambda" {
   name = "${local.name_prefix}-chat-lambda-role"
 
