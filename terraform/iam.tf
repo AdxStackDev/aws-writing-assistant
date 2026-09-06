@@ -297,7 +297,10 @@ resource "aws_iam_role" "github_actions" {
           }
 
           StringLike = {
-            "token.actions.githubusercontent.com:sub" = "repo:AdxStackDev/aws-writing-assistant:*"
+            "token.actions.githubusercontent.com:sub" = [
+              "repo:AdxStackDev/aws-writing-assistant:ref:refs/heads/main",
+              "repo:AdxStackDev/aws-writing-assistant:pull_request"
+            ]
           }
         }
       }
