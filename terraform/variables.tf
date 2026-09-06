@@ -19,5 +19,5 @@ variable "environment" {
 variable "bedrock_model_id" {
   description = "Amazon Bedrock model ID"
   type        = string
-  default     = "zai.glm-5"
+  default     = "openai.gpt-oss-120b"
 }
