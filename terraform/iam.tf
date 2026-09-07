@@ -411,8 +411,21 @@ resource "aws_iam_role_policy" "github_actions" {
           "iam:GetRole",
           "iam:GetPolicy",
           "iam:GetPolicyVersion",
+          "iam:GetRolePolicy",
+          "iam:GetOpenIDConnectProvider",
           "iam:ListRolePolicies",
-          "iam:ListAttachedRolePolicies"
+          "iam:ListAttachedRolePolicies",
+          "iam:CreateRole",
+          "iam:UpdateRole",
+          "iam:DeleteRole",
+          "iam:PutRolePolicy",
+          "iam:DeleteRolePolicy",
+          "iam:CreateOpenIDConnectProvider",
+          "iam:UpdateOpenIDConnectProvider",
+          "iam:DeleteOpenIDConnectProvider",
+          "iam:TagRole",
+          "iam:UntagRole",
+          "iam:TagOpenIDConnectProvider"
         ]
 
         Resource = "*"
