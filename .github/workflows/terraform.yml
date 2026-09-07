@@ -9,6 +9,7 @@ on:
       - "backend/**"
       - ".github/workflows/terraform.yml"
 
+
   pull_request:
     branches:
       - main
@@ -40,29 +41,12 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Build OpenAI Lambda Layer
-        working-directory: .
-        run: |
-          rm -rf backend/lambda_layers/openai
-          rm -f backend/lambda_layers/openai_layer.zip
-
-          mkdir -p backend/lambda_layers/openai/python
-
-          pip install \
-            -r backend/requirements.txt \
-            -t backend/lambda_layers/openai/python
-
-          cd backend/lambda_layers/openai
-
-          zip -r ../openai_layer.zip python
+      - name: Verify AWS identity
+        run: aws sts get-caller-identity
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
