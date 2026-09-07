@@ -1,6 +1,8 @@
 # Bedrock Writing Assistant
 
-An AI-powered writing assistant built on AWS. Paste your writing, get intelligent feedback powered by OpenAI GPT-OSS 120B via Amazon Bedrock's OpenAI-compatible endpoint. Includes full auth, conversation history, async notifications, and CI/CD.
+## Overview
+
+The Bedrock Writing Assistant is a production-ready, serverless AI writing feedback platform built entirely on AWS infrastructure. It leverages Amazon Bedrock's OpenAI-compatible endpoint to power an OpenAI GPT-OSS 120B model that analyzes writing quality through deterministic text analysis (word count, readability scores, weak words detection, long sentence identification, and repeated word highlighting) combined with intelligent AI-driven suggestions. The application features a React + TypeScript frontend hosted on S3, secure user authentication via Amazon Cognito with SRP and JWT tokens, serverless Python Lambda functions for API logic, DynamoDB for persistent storage of users, conversations, and messages, asynchronous event processing through SQS and SNS for notifications, and a fully automated CI/CD pipeline using GitHub Actions and Terraform. Users register, verify their email, log in to receive JWT tokens, submit writing samples through a chat interface that displays real-time AI feedback alongside conversation history, and benefit from a scalable, pay-per-request architecture deployed in the ap-south-1 (Mumbai) region with structured error handling, dead-letter queues, and comprehensive CloudWatch logging.
 
 ---
 
