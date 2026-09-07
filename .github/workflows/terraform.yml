@@ -9,7 +9,6 @@ on:
       - "backend/**"
       - ".github/workflows/terraform.yml"
 
-
   pull_request:
     branches:
       - main

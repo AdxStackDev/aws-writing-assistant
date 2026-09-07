@@ -116,7 +116,7 @@ export default function Chat({ conversationId, onConversationCreated }: Props) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask the writing assistant... (Enter to send, Shift+Enter for new line)"
+            placeholder="Ask the writing assistant..."
             rows={3}
             maxLength={8000}
           />
@@ -125,10 +125,13 @@ export default function Chat({ conversationId, onConversationCreated }: Props) {
             className="send-btn"
             disabled={loading || !input.trim()}
           >
-            {loading ? "..." : "↑"}
+            {loading ? "·" : "↑"}
           </button>
         </form>
-        <p className="input-hint">{input.length}/8000</p>
+        <div className="input-footer">
+          <span className="input-shortcut">Enter to send · Shift+Enter for new line</span>
+          <span className="input-hint">{input.length}/8000</span>
+        </div>
       </div>
     </div>
   );
