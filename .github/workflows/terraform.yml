@@ -38,6 +38,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Build OpenAI Lambda layer
+        run: |
+          mkdir -p backend/lambda_layers/python
+          pip install openai -t backend/lambda_layers/python -q
+          cd backend/lambda_layers
+          zip -r openai_layer.zip python
+        working-directory: ${{ github.workspace }}
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
