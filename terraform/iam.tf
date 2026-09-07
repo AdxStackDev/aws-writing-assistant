@@ -331,7 +331,9 @@ resource "aws_iam_role_policy" "github_actions" {
 
         Resource = [
           aws_s3_bucket.frontend.arn,
-          "${aws_s3_bucket.frontend.arn}/*"
+          "${aws_s3_bucket.frontend.arn}/*",
+          "arn:aws:s3:::writing-assistant-dev-terraform-state",
+          "arn:aws:s3:::writing-assistant-dev-terraform-state/*"
         ]
       },
 
