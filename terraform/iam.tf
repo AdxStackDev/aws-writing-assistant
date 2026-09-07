@@ -306,7 +306,6 @@ resource "aws_iam_role" "github_actions" {
       }
     ]
   })
-
   tags = {
     Project     = var.project_name
     Environment = var.environment
