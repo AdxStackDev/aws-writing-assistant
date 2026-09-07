@@ -66,7 +66,7 @@ export default function Chat({ conversationId, onConversationCreated }: Props) {
       <div className="messages-area">
         {messages.length === 0 && (
           <div className="empty-state">
-            <div className="empty-icon">✦</div>
+            <div className="empty-logo">✦</div>
             <h2>Writing Assistant</h2>
             <p>Paste your writing and ask for feedback, improvements, or analysis.</p>
             <div className="suggestions">
@@ -74,6 +74,8 @@ export default function Chat({ conversationId, onConversationCreated }: Props) {
               <span className="suggestion">Check readability</span>
               <span className="suggestion">Find weak words</span>
               <span className="suggestion">Improve tone</span>
+              <span className="suggestion">Make it concise</span>
+              <span className="suggestion">Fix grammar</span>
             </div>
           </div>
         )}

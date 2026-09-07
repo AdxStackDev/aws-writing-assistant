@@ -83,7 +83,7 @@ export default function App() {
     <div className="app">
       <aside className="sidebar">
         <div className="sidebar-header">
-          <span className="sidebar-logo">✦</span>
+          <div className="sidebar-logo-box">✦</div>
           <span className="sidebar-title">Writing Assistant</span>
         </div>
 
@@ -91,13 +91,14 @@ export default function App() {
           className="new-chat-btn"
           onClick={() => { setConversationId(null); setScreen("chat"); }}
         >
-          <span>+</span> New Chat
+          <div className="new-chat-plus">+</div>
+          New Chat
         </button>
 
         <nav className="sidebar-nav">
           {conversations.length > 0 && (
             <>
-              <p className="nav-label">Recent</p>
+              <p className="nav-section-label">Recent</p>
               {conversations.map((conv) => (
                 <button
                   key={conv.conversation_id}
@@ -105,7 +106,7 @@ export default function App() {
                   onClick={() => selectConversation(conv.conversation_id)}
                   title={conv.title || "Untitled"}
                 >
-                  <span className="nav-item-icon">💬</span>
+                  <span className="nav-item-dot"></span>
                   <span className="nav-item-text">{conv.title || "Untitled"}</span>
                 </button>
               ))}
@@ -118,13 +119,13 @@ export default function App() {
             className={`footer-btn${screen === "account" ? " active" : ""}`}
             onClick={() => setScreen("account")}
           >
-            ⚙ Account
+            <span className="footer-icon">⚙</span> Account
           </button>
           <button
             className="footer-btn"
             onClick={() => { logout(); setScreen("login"); setConversationId(null); setConversations([]); }}
           >
-            ↩ Logout
+            <span className="footer-icon">↩</span> Logout
           </button>
         </div>
       </aside>

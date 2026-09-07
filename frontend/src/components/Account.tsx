@@ -1,91 +1,59 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  getProfile,
-  updateProfile,
-} from "../api";
+import { useEffect, useState } from "react";
+import { getProfile, updateProfile } from "../api";
 
 export default function Account() {
-
-  const [displayName, setDisplayName] =
-    useState("");
-
-  const [email, setEmail] =
-    useState("");
-
-  const [message, setMessage] =
-    useState("");
-
+  const [displayName, setDisplayName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-
     getProfile()
       .then((profile) => {
-
-        setDisplayName(
-          profile.display_name || ""
-        );
-
-        setEmail(
-          profile.email || ""
-        );
-
+        setDisplayName(profile.display_name || "");
+        setEmail(profile.email || "");
       })
       .catch(console.error);
-
   }, []);
 
-
   async function save() {
-
-    await updateProfile(
-      displayName
-    );
-
-    setMessage(
-      "Profile updated"
-    );
+    setLoading(true);
+    try {
+      await updateProfile(displayName);
+      setMessage("Profile updated successfully");
+    } catch {
+      setMessage("Failed to update profile");
+    } finally {
+      setLoading(false);
+    }
   }
-
 
   return (
     <div className="account">
+      <div className="account-header">
+        <h2>Account settings</h2>
+        <p>Manage your profile information</p>
+      </div>
 
-      <h2>My Account</h2>
+      <div className="account-card">
+        <label>Email</label>
+        <input value={email} disabled />
 
-      <label>
-        Email
-      </label>
+        <label>Display name</label>
+        <input
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="Your name"
+        />
 
-      <input
-        value={email}
-        disabled
-      />
+        <button className="account-save-btn" onClick={save} disabled={loading}>
+          {loading ? "Saving..." : "Save changes"}
+        </button>
 
-      <label>
-        Display name
-      </label>
-
-      <input
-        value={displayName}
-        onChange={(e) =>
-          setDisplayName(
-            e.target.value
-          )
-        }
-      />
-
-      <button onClick={save}>
-        Save
-      </button>
-
-      {message && (
-        <p>{message}</p>
-      )}
-
+        {message && (
+          <div className="account-success">✓ {message}</div>
+        )}
+      </div>
     </div>
   );
 }
