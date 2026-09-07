@@ -15,13 +15,9 @@ on:
       - "frontend/**"
       - ".github/workflows/frontend.yml"
 
-permissions:
-  id-token: write
-  contents: read
-
 env:
   AWS_REGION: ap-south-1
-  S3_BUCKET: writing-assistant-dev-fe-478685e60a152e6bfe17ef28b9
+  FRONTEND_BUCKET: writing-assistant-dev-fe-478685e60a152e6bfe17ef28b9
 
 jobs:
   frontend:
@@ -39,23 +35,25 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build frontend
         run: npm run build
 
-      - name: Configure AWS credentials
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_GITHUB_ACTIONS_ROLE_ARN }}
-          aws-region: ${{ env.AWS_REGION }}
-
       - name: Deploy to S3
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: aws s3 sync dist/ s3://${{ env.S3_BUCKET }}/ --delete
+        run: aws s3 sync dist/ s3://${{ env.FRONTEND_BUCKET }}/ --delete
+
+      - name: Verify deployment
+        run: aws s3 ls s3://${{ env.FRONTEND_BUCKET }}/
