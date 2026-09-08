@@ -47,76 +47,63 @@ The Bedrock Writing Assistant is a production-ready, serverless AI writing feedb
 
 ```mermaid
 graph TB
-    User["👤 User<br/>(Browser)"]
+    User[User Browser]
 
-    subgraph Frontend["Frontend — S3 Static Website"]
-        React["React + Vite<br/>TypeScript"]
+    subgraph Presentation[PRESENTATION TIER]
+        React[React Frontend S3]
+        Cognito[Cognito Auth]
+        APIGW[API Gateway]
     end
 
-    subgraph Auth["Authentication"]
-        Cognito["Amazon Cognito<br/>User Pool"]
+    subgraph Application[APPLICATION TIER]
+        ChatLambda[Chat Lambda]
+        HistoryLambda[History Lambda]
+        ProfileLambda[Profile Lambda]
+        WorkerLambda[Notification Worker Lambda]
+        Bedrock[Bedrock AI GPT 120B]
+        SQS[SQS Queue]
+        SNS[SNS Notifications]
     end
 
-    subgraph API["API Layer"]
-        APIGW["API Gateway<br/>HTTP API v2<br/>JWT Authorizer"]
+    subgraph Data[DATA TIER]
+        ConvTable[Conversations Table]
+        MsgTable[Messages Table]
+        UserTable[Users Table]
+        DLQ[Dead Letter Queue]
     end
 
-    subgraph Lambdas["Lambda Functions (Python 3.12)"]
-        ChatLambda["chat<br/>handler.py"]
-        HistoryLambda["history<br/>handler.py"]
-        ProfileLambda["profile<br/>handler.py"]
-        WorkerLambda["notification-worker<br/>handler.py"]
+    subgraph DevOps[DEVOPS]
+        GHA[GitHub Actions]
+        Terraform[Terraform IaC]
     end
 
-    subgraph AI["AI Layer"]
-        Bedrock["Amazon Bedrock<br/>OpenAI-compatible endpoint<br/>openai.gpt-oss-120b"]
-    end
-
-    subgraph Storage["Storage"]
-        ConvTable["DynamoDB<br/>conversations"]
-        MsgTable["DynamoDB<br/>messages"]
-        UserTable["DynamoDB<br/>users"]
-    end
-
-    subgraph Async["Async Processing"]
-        SQS["SQS<br/>notification queue"]
-        DLQ["SQS<br/>DLQ"]
-        SNS["SNS<br/>notifications topic"]
-    end
-
-    subgraph CICD["CI/CD"]
-        GHA["GitHub Actions"]
-        Terraform["Terraform"]
-    end
-
-    %% Flow Connections
-    User -->|"HTTPS"| React
-    User -->|"Register / Login"| Cognito
-    Cognito -->|"JWT Token"| React
-    React -->|"Bearer JWT"| APIGW
+    User --> React
+    User --> Cognito
+    Cognito --> React
+    React --> APIGW
     
-    APIGW -->|"POST /chat"| ChatLambda
-    APIGW -->|"GET /conversations"| HistoryLambda
-    APIGW -->|"GET /conversations/:id"| HistoryLambda
-    APIGW -->|"GET /profile"| ProfileLambda
-    APIGW -->|"PUT /profile"| ProfileLambda
+    APIGW --> ChatLambda
+    APIGW --> HistoryLambda
+    APIGW --> ProfileLambda
     
-    ChatLambda -->|"responses.create"| Bedrock
-    ChatLambda -->|"save messages"| ConvTable
-    ChatLambda -->|"save messages"| MsgTable
-    ChatLambda -->|"send event"| SQS
+    ChatLambda --> Bedrock
+    ChatLambda --> ConvTable
+    ChatLambda --> MsgTable
+    ChatLambda --> SQS
     
-    HistoryLambda -->|"query"| ConvTable
-    HistoryLambda -->|"query"| MsgTable
-    ProfileLambda -->|"get / update"| UserTable
+    HistoryLambda --> ConvTable
+    HistoryLambda --> MsgTable
     
-    SQS -->|"trigger"| WorkerLambda
-    SQS -->|"3 failures"| DLQ
-    WorkerLambda -->|"publish"| SNS
+    ProfileLambda --> UserTable
     
-    GHA -->|"terraform apply"| Terraform
-    Terraform -->|"provision"| APIGW
-
+    SQS --> WorkerLambda
+    SQS --> DLQ
+    WorkerLambda --> SNS
+    
+    GHA --> Terraform
+    Terraform --> APIGW
+    Terraform --> ChatLambda
+    Terraform --> ConvTable
 ```
 
 ---
@@ -413,6 +400,26 @@ VITE_API_URL=https://p5tlyx6tlh.execute-api.ap-south-1.amazonaws.com
 | Frontend URL | `http://writing-assistant-dev-fe-478685e60a152e6bfe17ef28b9.s3-website.ap-south-1.amazonaws.com` |
 | Region | `ap-south-1` |
 | Model | `openai.gpt-oss-120b` |
+
+---
+
+## Screenshots
+
+### User Registration
+![Registration Page](snaps/register.png)
+*New users can register with email and password. Amazon Cognito handles user pool management and sends verification codes.*
+
+### Email Verification
+![Verification Code Email](snaps/verification_code_mail.png)
+*After registration, users receive a 6-digit verification code via email to activate their account.*
+
+### Chat Interface
+![Chat Interface](snaps/chat.png)
+*The main chat interface where users submit writing samples and receive AI-powered feedback with text analysis (word count, readability, weak words, long sentences) and intelligent suggestions.*
+
+### DynamoDB Tables
+![DynamoDB Tables](snaps/dynamodb_tables.png)
+*Backend data persistence layer showing the three DynamoDB tables: users, conversations, and messages with PAY_PER_REQUEST billing mode.*
 
 ---
 
